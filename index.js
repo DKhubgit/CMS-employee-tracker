@@ -46,6 +46,9 @@ function init() {
             case "ADD an employee":
               addEmployee();
               break;
+            case "UPDATE an employee role":
+              updateRole();
+              break;
           }
     })
     .catch(err => console.log(err))
@@ -210,6 +213,44 @@ async function addEmployee() {
                         init();
                     }
                 })
+            }
+        })
+    })
+}
+
+async function updateRole() {
+    const sqlGet2 = `SELECT first_name FROM employees`
+    const tempArray2 = await db.promise().query(sqlGet2);
+    const empArray = tempArray2[0].map(item => item.first_name);
+
+    const sqlGet = `SELECT title FROM roles;`
+    let tempArray = await db.promise().query(sqlGet);
+    let roleArray = tempArray[0].map(item => item.title);
+
+    inquirer.prompt([
+        {
+            type: 'list',
+            message: "Select the Employee to update their role: ",
+            choices: empArray,
+            name: 'theEmp'
+        },
+        {
+            type: 'list',
+            message: "Select the new role for the Employee: ",
+            choices: roleArray,
+            name: 'theRole'
+        }
+    ])
+    .then(results => {
+        const empNum = empArray.indexOf(`${results.theEmp}`) + 1;
+        const roleNum = roleArray.indexOf(`${results.theRole}`) + 1;
+        const sqlUpdate = `UPDATE employees SET role_id = ${roleNum} WHERE id = ${empNum}`
+        db.query(sqlUpdate, function (err, result) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(green, `Updated ${results.theEmp}'s role!`);
+                init();
             }
         })
     })
