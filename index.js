@@ -37,7 +37,9 @@ function init() {
             case "ADD a department":
               addDept();
               break;
-
+            case "ADD a role":
+              addRoles();
+              break;
           }
     })
     .catch(err => console.log(err))
@@ -84,11 +86,61 @@ function addDept() {
                 db.query(sqlAdd, function (err, results) {
                     if (err) {
                         console.log(err, "Error on adding to database")
+                        return;
                     }
                 })
             }
         })
         console.log(`Added ${correctStr} Department to database!`);
+        init();
+    })
+    .catch(err => console.log(err));
+}
+
+async function addRoles() {
+    const sqlGet = `SELECT departments.name FROM departments;`
+    let newArray = await db.promise().query(sqlGet); //returns an array with two objects, access the first index for department names
+    let deptArray = newArray[0].map(item => item.name);
+    
+    inquirer.prompt([
+        {
+            type: 'input',
+            message: "Please Enter Title of Role: ",
+            name: "roleName"
+        },
+        {
+            type: 'input',
+            message: "Please enter the Salary: ",
+            name: "salary"
+        },
+        {
+            type: 'list',
+            message: "Which department does the role belong to?: ",
+            choices: deptArray,
+            name: 'deptChoice'
+        }
+    ])
+    .then(results =>{
+        let str = results.roleName.split(" ");
+        for (let i = 0; i < str.length; i++) {
+            str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+        }
+        str = str.join(" ");
+        const sqlAdd = `INSERT INTO roles (title, salary, department_id) VALUES ("${str}", ${results.salary}, "${deptArray.indexOf(`${results.deptChoice}`) + 1}" );`
+        const sqlFind = `SELECT 1 FROM roles WHERE title = "${str}";`
+        db.query(sqlFind, function (err, results) {
+            if (results.length === 1) {
+                console.log("Already in the database, Please choose a different title.")
+            } else {
+                db.query(sqlAdd, function (err, results) {
+                    if (err) {
+                        console.log(err, "Error on adding to database")
+                        return;
+                    }
+                })
+            }
+        })
+        console.log(`Added ${results.roleName} role to database!`);
         init();
     })
     .catch(err => console.log(err));
