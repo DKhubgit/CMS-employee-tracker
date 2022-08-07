@@ -4,7 +4,7 @@ const db = require('./config/connection');
 const db_table = require('console.table');
 
 //view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-const options = ["1) VIEW all departments", "2) VIEW all roles", "3) VIEW all employees", "4) ADD a department", "5) ADD a role", "6) ADD an employee", "7) UPDATE an employee role", "8) Exit"]
+const options = ["VIEW all departments", "VIEW all roles", "VIEW all employees", "ADD a department", "ADD a role", "ADD an employee", "UPDATE an employee role", "Exit"]
 
 function init() {
    inquirer.prompt([
@@ -18,8 +18,9 @@ function init() {
     ])
     .then(result => {
         // console.log(result);
-        if (result.choice === "8) Exit") {
-            db.end();
+        if (result.choice === "Exit") {
+            db.end(); //exits the sql connection
+            return;
         }
     })
     .catch(err => console.log(err))
