@@ -2,7 +2,9 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 const db = require('./config/config');
 const db_table = require('console.table');
-const { Console } = require('console');
+
+const red = '\x1b[31m%s\x1b[0m';
+const green = '\x1b[32m%s\x1b[0m';
 
 //view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
 const options = ["VIEW all departments", "VIEW all roles", "VIEW all employees", "ADD a department", "ADD a role", "ADD an employee", "UPDATE an employee role", "Exit"]
@@ -20,6 +22,7 @@ function init() {
     .then(result => {
         // console.log(result);
         if (result.choice === "Exit") {
+            console.log("GoodBye!")
             db.end(); //exits the sql connection
             return;
         }
@@ -39,6 +42,9 @@ function init() {
               break;
             case "ADD a role":
               addRoles();
+              break;
+            case "ADD an employee":
+              addEmployee();
               break;
           }
     })
@@ -66,8 +72,7 @@ function viewEmployees() {
     })
 }
 
-function addDept() {
-    //TODO: add a department to database get 
+function addDept() { 
     inquirer.prompt([
         {
             type: 'input',
@@ -75,24 +80,26 @@ function addDept() {
             name: "deptName"
         }
     ])
-    .then(results =>{
+    .then(results => {
         let correctStr = results.deptName.charAt(0).toUpperCase() + results.deptName.slice(1);
         const sqlAdd = `INSERT INTO departments (name) VALUES ("${correctStr}");`
         const sqlFind = `SELECT 1 FROM departments WHERE name = "${correctStr}";`
         db.query(sqlFind, function (err, results) {
             if (results.length === 1) {
-                console.log("Already in the database, Please choose a different title.")
+                console.log(red, "Already in the database, Please choose a different option.")
+                init();
             } else {
                 db.query(sqlAdd, function (err, results) {
                     if (err) {
                         console.log(err, "Error on adding to database")
                         return;
+                    } else {
+                        console.log(green, `Added ${correctStr} Department to database!`);
+                        init();
                     }
                 })
             }
         })
-        console.log(`Added ${correctStr} Department to database!`);
-        init();
     })
     .catch(err => console.log(err));
 }
@@ -117,6 +124,7 @@ async function addRoles() {
             type: 'list',
             message: "Which department does the role belong to?: ",
             choices: deptArray,
+            loop: false,
             name: 'deptChoice'
         }
     ])
@@ -130,20 +138,81 @@ async function addRoles() {
         const sqlFind = `SELECT 1 FROM roles WHERE title = "${str}";`
         db.query(sqlFind, function (err, results) {
             if (results.length === 1) {
-                console.log("Already in the database, Please choose a different title.")
+                console.log(red, "Already in the database, Please choose a different option.")
+                init();
             } else {
                 db.query(sqlAdd, function (err, results) {
                     if (err) {
                         console.log(err, "Error on adding to database")
                         return;
+                    } else {
+                        console.log(green, `Added ${results.roleName} role to database!`);
+                        init();
                     }
                 })
             }
         })
-        console.log(`Added ${results.roleName} role to database!`);
-        init();
     })
     .catch(err => console.log(err));
+}
+
+async function addEmployee() {
+    const sqlGet = `SELECT title FROM roles;`
+    let tempArray = await db.promise().query(sqlGet);
+    let roleArray = tempArray[0].map(item => item.title);
+
+    const sqlGet2 = `SELECT first_name FROM employees`
+    const tempArray2 = await db.promise().query(sqlGet2);
+    const empArray = tempArray2[0].map(item => item.first_name);
+    
+    inquirer.prompt([
+        {
+            type: 'input',
+            message: "Please enter employee's first name: ",
+            name: "firstName"
+        },
+        {
+            type: 'input',
+            message: "Please enter last name: ",
+            name: "lastName"
+        },
+        {
+            type: 'list',
+            message: "Who is the employee's Manager?: ",
+            choices: empArray,
+            loop: false,
+            name: "manager"
+        },
+        {
+            type: 'list',
+            message: "What is the employee's role?: ",
+            choices: roleArray,
+            loop: false,
+            name: 'role'
+        }
+    ])
+    .then(results => {
+        const managerNum = empArray.indexOf(`${results.manager}`) + 1;
+        const roleNum = roleArray.indexOf(`${results.role}`) + 1;
+        const sqlAdd = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${results.firstName}", "${results.lastName}", ${roleNum}, ${managerNum});`
+        const sqlFind = `SELECT 1 FROM employees WHERE first_name = "${results.firstName}" AND last_name = "${results.lastName}";`;
+        db.query(sqlFind, function (err, results) {
+            if (results.length === 1) {
+                console.log(red, "Already in the database, Please choose a different option.")
+                init();
+            } else {
+                db.query(sqlAdd, function (err, results) {
+                    if (err) {
+                        console.log(err, "Error on adding to database")
+                        return;
+                    } else {
+                        console.log(green, `Added ${results.firstName} ${results.lastName} to the database!`);
+                        init();
+                    }
+                })
+            }
+        })
+    })
 }
 
 init(); 
