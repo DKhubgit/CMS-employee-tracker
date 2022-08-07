@@ -57,7 +57,7 @@ function viewRoles() {
 //including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
 function viewEmployees() {
     //TODO: query database on employee table
-    const sqlViewEmp = `SELECT emp1.id, emp1.first_name AS First, emp1.last_name AS Last, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, emp2.first_name AS Manager FROM employees AS emp1 JOIN employees AS emp2 ON emp1.manager_id = emp2.id JOIN roles ON emp1.role_id = roles.id JOIN departments ON roles.department_id = departments.id`
+    const sqlViewEmp = `SELECT emp1.id, emp1.first_name AS First, emp1.last_name AS Last, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, emp2.first_name AS Manager FROM employees AS emp1 LEFT JOIN employees AS emp2 ON emp1.manager_id = emp2.id LEFT JOIN roles ON emp1.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id`
     db.query(sqlViewEmp, function (err, results) {
         console.table(results);
         init();
