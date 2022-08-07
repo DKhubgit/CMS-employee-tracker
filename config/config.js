@@ -12,7 +12,7 @@ const db = mysql.createConnection(
     },
 );
 
-//create Database with tables
+//create Database with tables if it hasn't yet
 const sql = 'CREATE DATABASE IF NOT EXISTS company_db';
 db.query(sql, function (err, results) {
     if (err) {
