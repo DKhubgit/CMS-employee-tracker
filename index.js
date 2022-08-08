@@ -97,14 +97,14 @@ function addDept() {
         //capitalizes the first letter of the word
         let correctStr = results.deptName.charAt(0).toUpperCase() + results.deptName.slice(1);
 
-        const sqlAdd = `INSERT INTO departments (name) VALUES ("${correctStr}");`
-        const sqlFind = `SELECT 1 FROM departments WHERE name = "${correctStr}";`
-        db.query(sqlFind, function (err, results) {
+        const sqlAdd = `INSERT INTO departments (name) VALUES (?);`
+        const sqlFind = `SELECT 1 FROM departments WHERE name = ?;`
+        db.execute(sqlFind, [correctStr], function (err, results) {
             if (results.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
                 init();
             } else {
-                db.query(sqlAdd, function (err, results) {
+                db.execute(sqlAdd, [correctStr], function (err, results) {
                     if (err) {
                         console.log(err, "Error on adding to database")
                         return;
@@ -151,14 +151,14 @@ async function addRoles() {
             str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
         }
         str = str.join(" ");
-        const sqlAdd = `INSERT INTO roles (title, salary, department_id) VALUES ("${str}", ${results.salary}, "${deptArray.indexOf(`${results.deptChoice}`) + 1}" );`
-        const sqlFind = `SELECT 1 FROM roles WHERE title = "${str}";`
-        db.query(sqlFind, function (err, results) {
-            if (results.length === 1) {
+        const sqlAdd = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, "${deptArray.indexOf(`${results.deptChoice}`) + 1}" );`
+        const sqlFind = `SELECT 1 FROM roles WHERE title = ?;`
+        db.execute(sqlFind,[str], function (err, result) {
+            if (result.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
                 init();
             } else {
-                db.query(sqlAdd, function (err, results) {
+                db.query(sqlAdd,[str, results.salary], function (err, res) {
                     if (err) {
                         console.log(err, "Error on adding to database")
                         return;
@@ -213,14 +213,14 @@ async function addEmployee() {
         const managerNum = empArray.indexOf(`${results.manager}`) + 1;
         const roleNum = roleArray.indexOf(`${results.role}`) + 1;
 
-        const sqlAdd = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${results.firstName}", "${results.lastName}", ${roleNum}, ${managerNum});`
-        const sqlFind = `SELECT 1 FROM employees WHERE first_name = "${results.firstName}" AND last_name = "${results.lastName}";`;
-        db.query(sqlFind, function (err, results) {
-            if (results.length === 1) {
+        const sqlAdd = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ${roleNum}, ${managerNum});`
+        const sqlFind = `SELECT 1 FROM employees WHERE first_name = ? AND last_name = ?;`;
+        db.execute(sqlFind,[results.firstName, results.lastName], function (err, result) {
+            if (result.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
                 init();
             } else {
-                db.query(sqlAdd, function (err, results) {
+                db.execute(sqlAdd,[results.firstName, results.lastName], function (err, res) {
                     if (err) {
                         console.log(err, "Error on adding to database")
                         return;
