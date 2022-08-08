@@ -32,7 +32,7 @@ db.query(deptTable, function (err, results) {
     }
 });
 
-const roleTable = `CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(30) NOT NULL, salary DECIMAL NOT NULL, department_id INT, FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL);`
+const roleTable = `CREATE TABLE IF NOT EXISTS roles (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(30) NOT NULL, salary DECIMAL NOT NULL, department_id INT, FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE);`
 
 db.query(roleTable, function (err, results) {
     if (err) {
