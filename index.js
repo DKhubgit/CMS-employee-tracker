@@ -70,7 +70,12 @@ function viewDept() {
     })
 }
 function viewRoles() {
-    const sqlViewRoles = `SELECT roles.id, roles.title, roles.salary, departments.name AS Department FROM roles JOIN departments ON roles.department_id = departments.id;`
+    //utilizes the es6-string-html extension to highlight code as if it were in a sql file. 
+    const sqlViewRoles = /* sql */ `
+    SELECT roles.id, roles.title, roles.salary, departments.name AS Department 
+    FROM roles 
+    JOIN departments ON roles.department_id = departments.id;`
+
     db.query(sqlViewRoles, function (err, results) {
         console.table(results);
         init();
@@ -78,7 +83,13 @@ function viewRoles() {
 }
 function viewEmployees() {
     //When joining the same table, must have aliases for each table. 
-    const sqlViewEmp = `SELECT emp1.id, emp1.first_name AS First, emp1.last_name AS Last, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, emp2.first_name AS Manager FROM employees AS emp1 LEFT JOIN employees AS emp2 ON emp1.manager_id = emp2.id LEFT JOIN roles ON emp1.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id`
+    const sqlViewEmp = /* sql */ `
+    SELECT emp1.id, emp1.first_name AS First, emp1.last_name AS Last, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, emp2.first_name AS Manager 
+    FROM employees AS emp1 
+    LEFT JOIN employees AS emp2 ON emp1.manager_id = emp2.id 
+    LEFT JOIN roles ON emp1.role_id = roles.id 
+    LEFT JOIN departments ON roles.department_id = departments.id`
+
     db.query(sqlViewEmp, function (err, results) {
         console.table(results);
         init();
@@ -97,8 +108,8 @@ function addDept() {
         //capitalizes the first letter of the word
         let correctStr = results.deptName.charAt(0).toUpperCase() + results.deptName.slice(1);
 
-        const sqlAdd = `INSERT INTO departments (name) VALUES (?);`
-        const sqlFind = `SELECT 1 FROM departments WHERE name = ?;`
+        const sqlAdd = /* sql */ `INSERT INTO departments (name) VALUES (?);`
+        const sqlFind = /* sql */`SELECT 1 FROM departments WHERE name = ?;`
         db.execute(sqlFind, [correctStr], function (err, results) {
             if (results.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
@@ -121,7 +132,7 @@ function addDept() {
 
 async function addRoles() {
     //grabs the data from the database and appends them into an array.
-    const sqlGet = `SELECT departments.name FROM departments;`
+    const sqlGet =/* sql */ `SELECT departments.name FROM departments;`
     let newArray = await db.promise().query(sqlGet); //returns an array with two objects, access the first index for department names
     let deptArray = newArray[0].map(item => item.name);
     
@@ -151,8 +162,16 @@ async function addRoles() {
             str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
         }
         str = str.join(" ");
-        const sqlAdd = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, "${deptArray.indexOf(`${results.deptChoice}`) + 1}" );`
-        const sqlFind = `SELECT 1 FROM roles WHERE title = ?;`
+
+        const sqlAdd = /* sql */`
+            INSERT INTO roles (title, salary, department_id) 
+            VALUES (?, ?, "${deptArray.indexOf(`${results.deptChoice}`) + 1}" );`
+
+        const sqlFind = /* sql */`
+            SELECT 1 
+            FROM roles 
+            WHERE title = ?;`
+
         db.execute(sqlFind,[str], function (err, result) {
             if (result.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
@@ -174,11 +193,17 @@ async function addRoles() {
 }
 
 async function addEmployee() {
-    const sqlGet = `SELECT title FROM roles;`
+    const sqlGet = /* sql */`
+        SELECT title 
+        FROM roles;`
+
     let tempArray = await db.promise().query(sqlGet);
     let roleArray = tempArray[0].map(item => item.title);
 
-    const sqlGet2 = `SELECT first_name FROM employees`
+    const sqlGet2 = /* sql */`
+        SELECT first_name 
+        FROM employees`
+
     const tempArray2 = await db.promise().query(sqlGet2);
     const empArray = tempArray2[0].map(item => item.first_name);
     
@@ -213,8 +238,15 @@ async function addEmployee() {
         const managerNum = empArray.indexOf(`${results.manager}`) + 1;
         const roleNum = roleArray.indexOf(`${results.role}`) + 1;
 
-        const sqlAdd = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ${roleNum}, ${managerNum});`
-        const sqlFind = `SELECT 1 FROM employees WHERE first_name = ? AND last_name = ?;`;
+        const sqlAdd = /* sql */`
+            INSERT INTO employees (first_name, last_name, role_id, manager_id) 
+            VALUES (?, ?, ${roleNum}, ${managerNum});`
+
+        const sqlFind = /* sql */`
+            SELECT 1 
+            FROM employees 
+            WHERE first_name = ? AND last_name = ?;`
+
         db.execute(sqlFind,[results.firstName, results.lastName], function (err, result) {
             if (result.length === 1) {
                 console.log(red, "Already in the database, Please choose a different option.")
@@ -236,11 +268,17 @@ async function addEmployee() {
 }
 
 async function updateRole() {
-    const sqlGet2 = `SELECT first_name FROM employees`
+    const sqlGet2 = /* sql */`
+        SELECT first_name 
+        FROM employees`
+
     const tempArray2 = await db.promise().query(sqlGet2);
     const empArray = tempArray2[0].map(item => item.first_name);
 
-    const sqlGet = `SELECT title FROM roles;`
+    const sqlGet = /* sql */`
+        SELECT title 
+        FROM roles;`
+
     let tempArray = await db.promise().query(sqlGet);
     let roleArray = tempArray[0].map(item => item.title);
 
@@ -261,7 +299,12 @@ async function updateRole() {
     .then(results => {
         const empNum = empArray.indexOf(`${results.theEmp}`) + 1;
         const roleNum = roleArray.indexOf(`${results.theRole}`) + 1;
-        const sqlUpdate = `UPDATE employees SET role_id = ${roleNum} WHERE id = ${empNum}`
+
+        const sqlUpdate = /* sql */`
+            UPDATE employees 
+            SET role_id = ${roleNum} 
+            WHERE id = ${empNum}`
+
         db.query(sqlUpdate, function (err, result) {
             if (err) {
                 console.log(err);
@@ -275,7 +318,10 @@ async function updateRole() {
 }
 
 async function deleteDept() {
-    const sqlGet = `SELECT name FROM departments`
+    const sqlGet = /* sql */`
+        SELECT name 
+        FROM departments`
+
     const tempArray = await db.promise().query(sqlGet);
     const deptArray = tempArray[0].map(item => item.name);
     inquirer.prompt([
@@ -288,7 +334,11 @@ async function deleteDept() {
         }
     ])
     .then(results => {
-        const sql = `DELETE FROM departments WHERE id = ${deptArray.indexOf(`${results.deleteDept}`) + 1}`
+        const sql = /* sql */`
+            DELETE 
+            FROM departments 
+            WHERE id = ${deptArray.indexOf(`${results.deleteDept}`) + 1}`
+
         db.query(sql, function (err,result) {
             if (err) {
                 console.log(err)
@@ -302,7 +352,10 @@ async function deleteDept() {
 }
 
 async function deleteRole() {
-    const sqlGet = `SELECT title FROM roles`
+    const sqlGet = /* sql */`
+        SELECT title 
+        FROM roles`
+
     const tempArray = await db.promise().query(sqlGet);
     const roleArray = tempArray[0].map(item => item.title);
     inquirer.prompt([
@@ -315,7 +368,11 @@ async function deleteRole() {
         }
     ])
     .then(results => {
-        const sql = `DELETE FROM roles WHERE id = ${roleArray.indexOf(`${results.deleteRole}`) + 1}`
+        const sql = /* sql */`
+            DELETE 
+            FROM roles 
+            WHERE id = ${roleArray.indexOf(`${results.deleteRole}`) + 1}`
+
         db.query(sql, function (err,result) {
             if (err) {
                 console.log(err)
@@ -329,7 +386,10 @@ async function deleteRole() {
 }
 
 async function deleteEmp() {
-    const sqlGet = `SELECT first_name FROM employees`
+    const sqlGet = /* sql */`
+        SELECT first_name 
+        FROM employees`
+
     const tempArray = await db.promise().query(sqlGet);
     const empArray = tempArray[0].map(item => item.first_name);
     inquirer.prompt([
@@ -342,7 +402,11 @@ async function deleteEmp() {
         }
     ])
     .then(results => {
-        const sql = `DELETE FROM employees WHERE id = ${empArray.indexOf(`${results.deleteEmp}`) + 1}`
+        const sql = /* sql */`
+            DELETE 
+            FROM employees 
+            WHERE id = ${empArray.indexOf(`${results.deleteEmp}`) + 1}`
+            
         db.query(sql, function (err,result) {
             if (err) {
                 console.log(err)
