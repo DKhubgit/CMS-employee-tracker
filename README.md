@@ -52,7 +52,17 @@
 
   ## Tests 
 
-  There is a file called `test` where it has the `Seeds.sql` file for data population.
+  There is a file called `test` where it has the `Seeds.sql` file for data population. NOTE, Before we proceed you must initiate the application once for the database to be created. Next, in order to populate the database with the seeds data, you must access the SQL command line interface by typing into the terminal:
+  ```
+  $ mysql -u root -p
+  ```
+  It will prompt you to enter your MySQL password, once you enter the password a welcome message will display on the terminal and you are now on the MySQL CLI. On the CLI, you will type in:
+  ```
+  mysql> USE company_db;
+
+  mysql> source test/seeds.sql;
+  ```
+  Once you run the commands there will be messages that say `Query OK` multiple times, which means the data has been appended. Now type `quit` and you are all set! Please see walkthrough video of the application.
 
 
 
