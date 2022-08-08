@@ -65,6 +65,9 @@ function init() {
 
 function viewDept() {
     db.query("SELECT * FROM departments;", function (err, results) {
+        if (results.length === 0) {
+            console.log(red, "No current Departments! Please add a Department")
+        }
         console.table(results);
         init();
     })
@@ -77,6 +80,9 @@ function viewRoles() {
     JOIN departments ON roles.department_id = departments.id;`
 
     db.query(sqlViewRoles, function (err, results) {
+        if (results.length === 0) {
+            console.log(red, "No current Roles! Please add a Role")
+        }
         console.table(results);
         init();
     })
@@ -91,6 +97,9 @@ function viewEmployees() {
     LEFT JOIN departments ON roles.department_id = departments.id`
 
     db.query(sqlViewEmp, function (err, results) {
+        if (results.length === 0) {
+            console.log(red, "No current Employees! Please add an Employee!")
+        }
         console.table(results);
         init();
     })
@@ -135,6 +144,12 @@ async function addRoles() {
     const sqlGet =/* sql */ `SELECT departments.name FROM departments;`
     let newArray = await db.promise().query(sqlGet); //returns an array with two objects, access the first index for department names
     let deptArray = newArray[0].map(item => item.name);
+
+    if (deptArray.length === 0) {
+        console.log(red, "No Departments available for roles, Please add a Department First!")
+        init();
+        return;
+    }
     
     inquirer.prompt([
         {
@@ -205,7 +220,15 @@ async function addEmployee() {
         FROM employees`
 
     const tempArray2 = await db.promise().query(sqlGet2);
-    const empArray = tempArray2[0].map(item => item.first_name);
+    let empArray = tempArray2[0].map(item => item.first_name);
+
+    if (roleArray.length === 0) {
+        console.log(red, "No available roles, Please add a Role first!")
+        init();
+        return;
+    } else if (empArray.length === 0) {
+        empArray = ['None']
+    }
     
     inquirer.prompt([
         {
@@ -235,8 +258,13 @@ async function addEmployee() {
     ])
     .then(results => {
         //gets the index of the array and tweaks it to match the data table ids.
-        const managerNum = empArray.indexOf(`${results.manager}`) + 1;
-        const roleNum = roleArray.indexOf(`${results.role}`) + 1;
+        let managerNum = 0;
+        if (results.manager === 'None') {
+            managerNum = null;
+        } else {
+            managerNum = empArray.indexOf(`${results.manager}`) + 1;
+        }
+        let roleNum = roleArray.indexOf(`${results.role}`) + 1;
 
         const sqlAdd = /* sql */`
             INSERT INTO employees (first_name, last_name, role_id, manager_id) 
@@ -282,6 +310,17 @@ async function updateRole() {
     let tempArray = await db.promise().query(sqlGet);
     let roleArray = tempArray[0].map(item => item.title);
 
+    if (empArray.length === 0) {
+        console.log(red, "No available employees, Please add an Employee first!")
+        init();
+        return;
+    } else if (roleArray.length === 0) {
+        console.log(red, "No available roles, Please add a Role first!")
+        init();
+        return;
+    }
+
+
     inquirer.prompt([
         {
             type: 'list',
@@ -324,6 +363,13 @@ async function deleteDept() {
 
     const tempArray = await db.promise().query(sqlGet);
     const deptArray = tempArray[0].map(item => item.name);
+
+    if (deptArray.length === 0) {
+        console.log(red, "No Department to Delete!")
+        init();
+        return;
+    }
+
     inquirer.prompt([
         {
             type: 'list',
@@ -358,6 +404,13 @@ async function deleteRole() {
 
     const tempArray = await db.promise().query(sqlGet);
     const roleArray = tempArray[0].map(item => item.title);
+
+    if (roleArray.length === 0) {
+        console.log(red, "No Role to Delete!")
+        init();
+        return;
+    }
+
     inquirer.prompt([
         {
             type: 'list',
@@ -392,6 +445,12 @@ async function deleteEmp() {
 
     const tempArray = await db.promise().query(sqlGet);
     const empArray = tempArray[0].map(item => item.first_name);
+
+    if (empArray.length === 0) {
+        console.log(red, "No Employees to Delete!")
+        init();
+        return;
+    }
     inquirer.prompt([
         {
             type: 'list',
