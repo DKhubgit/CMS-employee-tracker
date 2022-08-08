@@ -7,7 +7,7 @@ const red = '\x1b[31m%s\x1b[0m';
 const green = '\x1b[32m%s\x1b[0m';
 
 //view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-const options = ["VIEW all departments", "VIEW all roles", "VIEW all employees", "ADD a department", "ADD a role", "ADD an employee", "UPDATE an employee role", "Exit"]
+const options = ["VIEW all departments", "VIEW all roles", "VIEW all employees", "ADD a department", "ADD a role", "ADD an employee", "UPDATE an employee role", "DELETE a Department","DELETE a Role","DELETE an Employee", "Exit"]
 
 function init() {
    inquirer.prompt([
@@ -49,6 +49,15 @@ function init() {
             case "UPDATE an employee role":
               updateRole();
               break;
+            case "DELETE a Department":
+              deleteDept();
+              break;
+            case "DELETE a Role":
+              deleteRole();
+              break;
+            case "DELETE an Employee":
+              deleteEmp();
+              break;
           }
     })
     .catch(err => console.log(err))
@@ -68,6 +77,7 @@ function viewRoles() {
     })
 }
 function viewEmployees() {
+    //When joining the same table, must have aliases for each table. 
     const sqlViewEmp = `SELECT emp1.id, emp1.first_name AS First, emp1.last_name AS Last, roles.title AS Title, departments.name AS Department, roles.salary AS Salary, emp2.first_name AS Manager FROM employees AS emp1 LEFT JOIN employees AS emp2 ON emp1.manager_id = emp2.id LEFT JOIN roles ON emp1.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id`
     db.query(sqlViewEmp, function (err, results) {
         console.table(results);
@@ -84,7 +94,9 @@ function addDept() {
         }
     ])
     .then(results => {
+        //capitalizes the first letter of the word
         let correctStr = results.deptName.charAt(0).toUpperCase() + results.deptName.slice(1);
+
         const sqlAdd = `INSERT INTO departments (name) VALUES ("${correctStr}");`
         const sqlFind = `SELECT 1 FROM departments WHERE name = "${correctStr}";`
         db.query(sqlFind, function (err, results) {
@@ -108,6 +120,7 @@ function addDept() {
 }
 
 async function addRoles() {
+    //grabs the data from the database and appends them into an array.
     const sqlGet = `SELECT departments.name FROM departments;`
     let newArray = await db.promise().query(sqlGet); //returns an array with two objects, access the first index for department names
     let deptArray = newArray[0].map(item => item.name);
@@ -132,6 +145,7 @@ async function addRoles() {
         }
     ])
     .then(results =>{
+        //capitalizes the first letter of each word that was inputed
         let str = results.roleName.split(" ");
         for (let i = 0; i < str.length; i++) {
             str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
@@ -195,8 +209,10 @@ async function addEmployee() {
         }
     ])
     .then(results => {
+        //gets the index of the array and tweaks it to match the data table ids.
         const managerNum = empArray.indexOf(`${results.manager}`) + 1;
         const roleNum = roleArray.indexOf(`${results.role}`) + 1;
+
         const sqlAdd = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${results.firstName}", "${results.lastName}", ${roleNum}, ${managerNum});`
         const sqlFind = `SELECT 1 FROM employees WHERE first_name = "${results.firstName}" AND last_name = "${results.lastName}";`;
         db.query(sqlFind, function (err, results) {
@@ -216,6 +232,7 @@ async function addEmployee() {
             }
         })
     })
+    .catch(err => console.log(err));
 }
 
 async function updateRole() {
@@ -254,6 +271,88 @@ async function updateRole() {
             }
         })
     })
+    .catch(err => console.log(err));
+}
+
+async function deleteDept() {
+    const sqlGet = `SELECT name FROM departments`
+    const tempArray = await db.promise().query(sqlGet);
+    const deptArray = tempArray[0].map(item => item.name);
+    inquirer.prompt([
+        {
+            type: 'list',
+            message: "Which Department would you like to delete?: ",
+            choices: deptArray,
+            loop: false,
+            name: "deleteDept"
+        }
+    ])
+    .then(results => {
+        const sql = `DELETE FROM departments WHERE id = ${deptArray.indexOf(`${results.deleteDept}`) + 1}`
+        db.query(sql, function (err,result) {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(green, `Deleted Department!`);
+                init();
+            }
+        });
+    })
+    .catch(err => console.log(err));
+}
+
+async function deleteRole() {
+    const sqlGet = `SELECT title FROM roles`
+    const tempArray = await db.promise().query(sqlGet);
+    const roleArray = tempArray[0].map(item => item.title);
+    inquirer.prompt([
+        {
+            type: 'list',
+            message: "Which Role would you like to delete?: ",
+            choices: roleArray,
+            loop: false,
+            name: "deleteRole"
+        }
+    ])
+    .then(results => {
+        const sql = `DELETE FROM roles WHERE id = ${roleArray.indexOf(`${results.deleteRole}`) + 1}`
+        db.query(sql, function (err,result) {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(green, `Deleted Role!`);
+                init();
+            }
+        });
+    })
+    .catch(err => console.log(err));
+}
+
+async function deleteEmp() {
+    const sqlGet = `SELECT first_name FROM employees`
+    const tempArray = await db.promise().query(sqlGet);
+    const empArray = tempArray[0].map(item => item.first_name);
+    inquirer.prompt([
+        {
+            type: 'list',
+            message: "Which Employee would you like to delete?: ",
+            choices: empArray,
+            loop: false,
+            name: "deleteEmp"
+        }
+    ])
+    .then(results => {
+        const sql = `DELETE FROM employees WHERE id = ${empArray.indexOf(`${results.deleteEmp}`) + 1}`
+        db.query(sql, function (err,result) {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(green, `Deleted Employee!`);
+                init();
+            }
+        });
+    })
+    .catch(err => console.log(err));
 }
 
 init(); 
